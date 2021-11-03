@@ -1,0 +1,227 @@
+CREATE TABLE festivals
+  (
+     festivalID           SERIAL,
+     festivalStartingDate DATE,
+     festivalEndingDate   DATE,
+     PRIMARY KEY (festivalID)
+  );
+
+CREATE TABLE tickets
+  (
+     ticketID         SERIAL,
+     price            FLOAT4 NOT NULL,
+     place            VARCHAR(255),
+     sellingPage      VARCHAR(255),
+     "event"          INT4 NOT NULL,
+     ticketVendor     INT4 NOT NULL,
+     PRIMARY KEY (ticketID)
+  );
+
+CREATE TABLE localizations
+  (
+     localizationID   SERIAL,
+     localizationName VARCHAR(50) NOT NULL,
+     postCode         VARCHAR(6) NOT NULL,
+     adress           VARCHAR(255) NOT NULL,
+     city             INT4 NOT NULL,
+     PRIMARY KEY (localizationID)
+  );
+
+CREATE TABLE users
+  (
+     userID   		SERIAL,
+     username 		VARCHAR(40) NOT NULL UNIQUE,
+     "password" 	VARCHAR(64) NOT NULL,
+     email    		VARCHAR(30) NOT NULL UNIQUE,
+     "role"     	VARCHAR(15) NOT NULL,
+     city  	  INT4 NOT NULL,
+     PRIMARY KEY (userID)
+  );
+
+CREATE TABLE events
+  (
+     eventID            SERIAL,
+     eventName          VARCHAR(255) NOT NULL,
+     eventDate          DATE,
+     eventTime          TIME(4),
+     localization     INT4 NOT NULL,
+     organizer          INT4 NOT NULL,
+     festival 			INT4,
+     PRIMARY KEY (eventID)
+  );
+
+CREATE TABLE pieces
+  (
+     pieceID     SERIAL,
+     pieceLength INT4,
+     genre       INT4 NOT NULL,
+     artist      INT4 NOT NULL,
+     PRIMARY KEY (pieceID)
+  );
+
+CREATE TABLE genres
+  (
+	 genreID   SERIAL,
+     genreName INT4 NOT NULL,
+     PRIMARY KEY (genreID)
+  );
+
+CREATE TABLE countries
+  (
+	 countryID   SERIAL,
+     countryName VARCHAR(60) NOT NULL,
+     PRIMARY KEY (countryID)
+  );
+
+CREATE TABLE ticketvendors
+  (
+	 ticketVendorID   SERIAL,
+     ticketVendorName VARCHAR(255) NOT NULL,
+     ticketVendorPage VARCHAR(255) NOT NULL,
+     PRIMARY KEY (ticketVendorID)
+  );
+
+CREATE TABLE organizers
+  (
+     organizerID   SERIAL,
+     organizerName VARCHAR(255) NOT NULL,
+     organizerPage VARCHAR(255),
+     PRIMARY KEY (organizerID)
+  );
+
+CREATE TABLE cities
+  (
+     cityID      SERIAL,
+     cityName    VARCHAR(75) NOT NULL,
+     country INT4 NOT NULL,
+     PRIMARY KEY (cityID)
+  );
+
+CREATE TABLE professions
+  (
+	 professionID   SERIAL,
+     professionName VARCHAR(50) NOT NULL,
+     PRIMARY KEY (professionID)
+  );
+
+CREATE TABLE artists
+  (
+     artistID       SERIAL,
+     artistName     VARCHAR(50) NOT NULL,
+     foundationYear INT4,
+     description    VARCHAR(255),
+     PRIMARY KEY (artistID)
+  );
+
+CREATE TABLE artistsEvents
+  (
+	 "event"  		INT4 NOT NULL,
+     artist   		INT4 NOT NULL,
+     PRIMARY KEY ("event", artist)
+  );
+
+CREATE TABLE artistsProfessions
+  (
+     artist         INT4 NOT NULL,
+     profession     INT4 NOT NULL,
+     PRIMARY KEY (artist, profession)
+  );
+
+ALTER TABLE users
+  ADD CONSTRAINT usersCities FOREIGN KEY (city) REFERENCES cities (cityID);
+
+ALTER TABLE events
+  ADD CONSTRAINT eventsLocalizations FOREIGN KEY (localization) REFERENCES
+  localizations (localizationID);
+
+ALTER TABLE tickets
+  ADD CONSTRAINT ticketsEvents FOREIGN KEY ("event") REFERENCES events (eventID)
+;
+
+ALTER TABLE events
+  ADD CONSTRAINT eventsFestivals FOREIGN KEY (festival) REFERENCES
+  festivals (festivalID);
+
+ALTER TABLE tickets
+  ADD CONSTRAINT ticketsTicketVendors FOREIGN KEY (ticketVendor) REFERENCES
+  ticketvendors (ticketVendorID);
+
+ALTER TABLE events
+  ADD CONSTRAINT eventsOrganizers FOREIGN KEY (organizer) REFERENCES organizers (
+  organizerID);
+
+ALTER TABLE pieces
+  ADD CONSTRAINT piecesArtists FOREIGN KEY (artist) REFERENCES artists (
+  artistID);
+
+ALTER TABLE pieces
+  ADD CONSTRAINT piecesGenres FOREIGN KEY (genre) REFERENCES genres (
+  genreID);
+
+ALTER TABLE artistsEvents
+  ADD CONSTRAINT artistsEventsEvents FOREIGN KEY ("event") REFERENCES events (
+  eventID);
+
+ALTER TABLE artistsEvents
+  ADD CONSTRAINT artistsEventsArtists FOREIGN KEY (artist) REFERENCES artists (
+  artistID);
+
+ALTER TABLE artistsProfessions
+  ADD CONSTRAINT artistsProfessionsProfessions FOREIGN KEY (profession) REFERENCES
+  professions (professionID);
+
+ALTER TABLE artistsProfessions
+  ADD CONSTRAINT artistsProfessionsArtists FOREIGN KEY (artist) REFERENCES artists (
+  artistID);
+
+ALTER TABLE localizations
+  ADD CONSTRAINT localizationsCities FOREIGN KEY (city) REFERENCES cities (cityID
+  );
+
+ALTER TABLE cities
+  ADD CONSTRAINT citiesCountries FOREIGN KEY (country) REFERENCES countries (
+  countryID); 
+  
+  ALTER TABLE festivals
+ADD CONSTRAINT festivalDateCheck 
+CHECK (
+	festivalStartingDate <= festivalEndingDate
+);
+
+ALTER TABLE festivals
+ADD CONSTRAINT festivalsTodayDateCheck
+CHECK (
+	festivalStartingDate > now()
+	AND festivalEndingDate > now()
+);
+
+ALTER TABLE tickets
+ADD CONSTRAINT ticketsPriceCheck 
+CHECK (
+	price >= 0
+);
+
+ALTER TABLE localizations
+ADD CONSTRAINT localizationsPostCodeCheck
+CHECK (
+	postCode like '[0-9]{2}-[0-9]{3}'
+);
+
+ALTER TABLE events
+ADD CONSTRAINT eventsTodayDateCheck
+CHECK (
+	eventDate > now()
+);
+
+ALTER TABLE pieces
+ADD CONSTRAINT piecesLengthCheck
+CHECK (
+	pieceLength > 0
+);
+
+ALTER TABLE artists
+ADD CONSTRAINT artistsYearCheck
+CHECK (
+	3000 > foundationYear
+	AND foundationYear > 0 
+);
